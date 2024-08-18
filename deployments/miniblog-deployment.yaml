@@ -1,0 +1,119 @@
+# Copyright 2020 Lingfei Kong <colin404@foxmail.com>. All rights reserved.
+# Use of this source code is governed by a MIT style
+# license that can be found in the LICENSE file.
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: miniweb # 资源标签
+  name: miniweb # 资源名称
+spec:
+  replicas: 2 # 副本数
+  progressDeadlineSeconds: 10
+  revisionHistoryLimit: 5
+  selector:
+    matchLabels:
+      app: miniweb
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: miniweb
+    spec:
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - miniweb
+              topologyKey: kubernetes.io/hostname
+            weight: 100
+      containers:
+      - command:
+        - /opt/miniweb/bin/miniweb
+        - --config=/etc/miniweb/miniweb.yaml
+        image: "marmotedu/miniweb-amd64:v1.0.0"
+        name: miniweb
+        ports:
+        - containerPort: 8443
+          name: secure
+          protocol: TCP
+        - containerPort: 8080
+          name: insecure
+          protocol: TCP
+        - containerPort: 9090
+          name: rpc 
+          protocol: TCP
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          failureThreshold: 1
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          failureThreshold: 1
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        startupProbe:
+          httpGet:
+            path: /healthz
+            port: 8080
+            scheme: HTTP
+          failureThreshold: 10
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 3
+        resources:
+            limits:
+              cpu: 250m
+              memory: 512Mi
+            requests:
+              cpu: 250m
+              memory: 512Mi
+        imagePullPolicy: Always
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/miniweb/miniweb.yaml
+          name: miniweb
+          subPath: miniweb.yaml
+        - mountPath: /etc/miniweb/cert
+          name: miniweb-cert
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+            {}
+      terminationGracePeriodSeconds: 5
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: miniweb.yaml
+            path: miniweb.yaml
+          name: miniweb
+        name: miniweb
+      - configMap:
+          defaultMode: 420
+          name: miniweb-cert
+        name: miniweb-cert

@@ -1,0 +1,12 @@
+[Unit]
+Description=APIServer for web platform.
+Documentation=https://github.com/bugsmo/miniweb/blob/master/init/README.md
+
+[Service]
+ExecStart=/opt/miniweb/bin/miniweb --config=/etc/miniweb/miniweb.yaml
+Restart=always
+RestartSec=5
+StartLimitInterval=0
+
+[Install]
+WantedBy=multi-user.target
