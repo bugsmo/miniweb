@@ -16,6 +16,7 @@ import (
 	"github.com/bugsmo/miniweb/internal/miniweb/store"
 	"github.com/bugsmo/miniweb/internal/pkg/log"
 	"github.com/bugsmo/miniweb/pkg/db"
+	generateLdapOpts "github.com/bugsmo/miniweb/pkg/ldap"
 )
 
 const (
@@ -94,12 +95,24 @@ func initStore() error {
 		LogLevel:              viper.GetInt("db.log-level"),
 	}
 
-	ins, err := db.NewMySQL(dbOptions)
+	dbIns, err := db.NewMySQL(dbOptions)
 	if err != nil {
 		return err
 	}
 
-	_ = store.NewStore(ins)
+	ldapOption := &generateLdapOpts.LdapOptions{
+		Host:      viper.GetString("ldap.host"),
+		AdminUser: viper.GetString("ldap.admin-user"),
+		BaseDN:    viper.GetString("ldap.base-dn"),
+		Password:  viper.GetString("ldap.password"),
+	}
+
+	ldapIns, err := generateLdapOpts.NewLdap(ldapOption)
+	if err != nil {
+		return err
+	}
+
+	_ = store.NewStore(dbIns, ldapIns)
 
 	return nil
 }

@@ -10,6 +10,7 @@ package store
 import (
 	"sync"
 
+	"github.com/go-ldap/ldap/v3"
 	"gorm.io/gorm"
 )
 
@@ -24,21 +25,23 @@ type IStore interface {
 	DB() *gorm.DB
 	Users() UserStore
 	Posts() PostStore
+	Ldap() *ldap.Conn
 }
 
 // datastore 是 IStore 的一个具体实现.
 type datastore struct {
-	db *gorm.DB
+	db   *gorm.DB
+	ldap *ldap.Conn
 }
 
 // 确保 datastore 实现了 IStore 接口.
 var _ IStore = (*datastore)(nil)
 
 // NewStore 创建一个 IStore 类型的实例.
-func NewStore(db *gorm.DB) *datastore {
+func NewStore(db *gorm.DB, ldap *ldap.Conn) *datastore {
 	// 确保 S 只被初始化一次
 	once.Do(func() {
-		S = &datastore{db}
+		S = &datastore{db, ldap}
 	})
 
 	return S
@@ -57,4 +60,8 @@ func (ds *datastore) Users() UserStore {
 // Posts 返回一个实现了 PostStore 接口的实例.
 func (ds *datastore) Posts() PostStore {
 	return newPosts(ds.db)
+}
+
+func (ds *datastore) Ldap() *ldap.Conn {
+	return ds.ldap
 }

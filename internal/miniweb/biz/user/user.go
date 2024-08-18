@@ -8,10 +8,14 @@ package user
 import (
 	"context"
 	"errors"
+	"fmt"
 	"regexp"
+	"strconv"
 	"sync"
 
+	"github.com/go-ldap/ldap/v3"
 	"github.com/jinzhu/copier"
+	"github.com/spf13/viper"
 	"golang.org/x/sync/errgroup"
 	"gorm.io/gorm"
 
@@ -69,10 +73,52 @@ func (b *userBiz) ChangePassword(ctx context.Context, username string, r *v1.Cha
 
 // Login 是 UserBiz 接口中 `Login` 方法的实现.
 func (b *userBiz) Login(ctx context.Context, r *v1.LoginRequest) (*v1.LoginResponse, error) {
+	// ldap 验证用户名和密码是否正确
+	_, err := b.ds.Ldap().SimpleBind(&ldap.SimpleBindRequest{
+		Username: fmt.Sprintf("cn=%s,ou=user,%s", r.Username, viper.GetString("ldap.base-dn")),
+		Password: r.Password,
+	})
+	if err != nil {
+		return nil, errors.New("登录失败")
+	}
+
 	// 获取登录用户的所有信息
 	user, err := b.ds.Users().Get(ctx, r.Username)
 	if err != nil {
-		return nil, errno.ErrUserNotFound
+		_ = b.ds.Ldap().Bind(viper.GetString("ldap.adminUser"), viper.GetString("ldap.password"))
+		searchRequest := ldap.NewSearchRequest(
+			viper.GetString("ldap.baseDN"),
+			ldap.ScopeWholeSubtree,
+			ldap.NeverDerefAliases,
+			0,
+			0,
+			false,
+			fmt.Sprintf("(cn=%s)", r.Username),
+			[]string{"uid", "cn", "mail", "sn", "telephoneNumber"},
+			nil,
+		)
+
+		sr, err := b.ds.Ldap().Search(searchRequest)
+		if err != nil || len(sr.Entries) != 1 {
+			return nil, errors.New("用户不存在/用户名称重复")
+		}
+
+		userEntry := sr.Entries[0]
+		uid, _ := strconv.Atoi(userEntry.GetAttributeValue("uid"))
+		data := model.UserM{
+			ID:       int64(uid),
+			Username: userEntry.GetAttributeValue("cn"),
+			Password: r.Password,
+			Phone:    userEntry.GetAttributeValue("telephoneNumber"),
+			Email:    userEntry.GetAttributeValue("mail"),
+			Nickname: userEntry.GetAttributeValue("sn"),
+		}
+
+		if err := b.ds.Users().Create(ctx, &data); err != nil {
+			return nil, err
+		}
+
+		user = &data
 	}
 
 	// 对比传入的明文密码和数据库中已加密过的密码是否匹配
