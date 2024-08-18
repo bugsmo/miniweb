@@ -35,6 +35,10 @@ export USAGE_OPTIONS
 
 ##@ hack/tools:
 
+.PHONY: tools
+tools: ## 安装项目依赖包.
+	@$(MAKE) tools.install
+
 .PHONY: tidy
 tidy: ## 自动添加/移除依赖包.
 	@$(MAKE) go.tidy
@@ -90,7 +94,7 @@ test: ## 执行单元测试.
 	@$(MAKE) go.test
 
 .PHONY: cover 
-cover: ## 执行单元测试，并校验覆盖率阈值.
+cover: ## 执行单元测试，并校验覆盖率阈值, 确认是否已安装 gawk.
 	@$(MAKE) go.cover
 
 
@@ -131,7 +135,7 @@ clean: ## 清理构建产物、临时文件等.
 ##@ all:
 
 .PHONY: all
-all: tidy add-copyright format lint cover build  ## 定义 Makefile all 伪目标，执行 `make` 时，会默认会执行 all 伪目标
+all: tidy add-copyright format cover build  ## 定义 Makefile all 伪目标，执行 `make` 时，会默认会执行 all 伪目标
 
 ## --------------------------------------
 ## Help

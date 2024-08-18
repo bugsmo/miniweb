@@ -5,12 +5,12 @@
 DOCKER := docker
 DOCKER_SUPPORTED_API_VERSION ?= 1.32
 
-REGISTRY_PREFIX ?= marmotedu
+REGISTRY_PREFIX ?= registry.cn-shenzhen.aliyuncs.com/bugsmo
 # 定义基础镜像
 BASE_IMAGE = centos:centos8
 
 EXTRA_ARGS ?= --no-cache
-_DOCKER_BUILD_EXTRA_ARGS :=
+_DOCKER_BUILD_EXTRA_ARGS := 
 
 ifdef HTTP_PROXY
 _DOCKER_BUILD_EXTRA_ARGS += --build-arg HTTP_PROXY=${HTTP_PROXY}

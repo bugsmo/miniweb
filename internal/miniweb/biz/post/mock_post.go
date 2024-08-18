@@ -11,9 +11,11 @@ package post
 
 import (
 	context "context"
-	v1 "github.com/bugsmo/miniweb/pkg/api/miniweb/v1"
-	gomock "github.com/golang/mock/gomock"
 	reflect "reflect"
+
+	gomock "github.com/golang/mock/gomock"
+
+	v1 "github.com/bugsmo/miniweb/pkg/api/miniweb/v1"
 )
 
 // MockPostBiz is a mock of PostBiz interface

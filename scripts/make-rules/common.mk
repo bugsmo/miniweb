@@ -20,6 +20,14 @@ TMP_DIR := $(OUTPUT_DIR)/tmp
 $(shell mkdir -p $(TMP_DIR))
 endif
 
+# 定义 API docs 文件存放路径
+ifeq ($(origin APIDOCS_ROOT),undefined)
+APIDOCS_ROOT := $(ROOT_DIR)/api/openapi
+$(shell mkdir -p $(APIDOCS_ROOT))
+endif
+
+# 测试覆盖率的目标值
+COVERAGE=10
 
 # ==============================================================================
 # 定义版本相关变量

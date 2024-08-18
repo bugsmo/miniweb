@@ -3,7 +3,7 @@
 # license that can be found in the LICENSE file.
 
 FROM BASE_IMAGE
-LABEL maintainer="<colin404@foxmail.com>"
+LABEL maintainer="<18550039021@163.com>"
 
 WORKDIR /opt/miniweb
 

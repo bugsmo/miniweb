@@ -5,11 +5,13 @@
 .PHONY: gen.protoc
 gen.protoc: tools.verify.protoc-gen-go ## 编译 protobuf 文件.
 	@echo "===========> Generate protobuf files"
-	@protoc                                            \
+	protoc                                            \
 		--proto_path=$(APIROOT)                          \
 		--proto_path=$(ROOT_DIR)/third_party             \
 		--go_out=paths=source_relative:$(APIROOT)        \
+		--go-http_out=paths=source_relative:$(APIROOT) \
 		--go-grpc_out=paths=source_relative:$(APIROOT)   \
+		--openapi_out=fq_schema_naming=true,default_response=false:$(APIDOCS_ROOT) \
 		$(shell find $(APIROOT) -name *.proto)
 
 .PHONY: gen.deps

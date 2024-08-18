@@ -11,10 +11,12 @@ package store
 
 import (
 	context "context"
-	model "github.com/bugsmo/miniweb/internal/pkg/model"
+	reflect "reflect"
+
 	gomock "github.com/golang/mock/gomock"
 	gorm "gorm.io/gorm"
-	reflect "reflect"
+
+	model "github.com/bugsmo/miniweb/internal/pkg/model"
 )
 
 // MockIStore is a mock of IStore interface

@@ -1,6 +1,6 @@
 module github.com/bugsmo/miniweb
 
-go 1.22.0
+go 1.22
 
 require (
 	github.com/AlekSi/pointer v1.2.0
